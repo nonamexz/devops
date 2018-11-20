@@ -1,0 +1,90 @@
+version: '2'  
+services:
+
+  zookeeper:
+    image: ziyunhx/zookeeper
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports: 
+     - "49181:2181"
+     - "22"
+
+  kafka:
+    container_name: kafka
+    restart: always
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      TZ: Asia/Shanghai
+      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CREATE_TOPICS: "stream-in:1:1,stream-out:1:1"
+    depends_on:
+      - zookeeper    
+
+  nimbus:
+    image: ziyunhx/storm-nimbus:1.2.2
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "49773:3773"
+      - "49772:3772"
+      - "49627:6627"
+      - "22"
+    links: 
+      - zookeeper:zk
+
+  supervisor:    
+    image: ziyunhx/storm-supervisor:1.2.2
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "8000"
+      - "22"
+    links: 
+      - nimbus:nimbus
+      - zookeeper:zk
+
+  ui:
+    image: ziyunhx/storm-ui:1.2.2
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "49080:8080"
+      - "22"
+    links: 
+      - nimbus:nimbus
+      - zookeeper:zk
+
+### Redis server ###
+  redis:    
+    image: redis:3-alpine
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    container_name: redis
+    volumes:
+      - /opt/data/redis:/data
+      - /opt/etc/redis/conf:/usr/local/etc/redis/
+    ports:
+      - "6379:6379"
+
+  mrd_face:
+    image: tomcat:8.5.34-jre8
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    container_name: mrd_face
+    volumes:  
+      - /opt/www/mrd_face:/usr/local/tomcat/webapps/ROOT
+      - /opt/logs/mrd_face:/usr/local/tomcat/logs
+    ports:  
+      - "8080:8080"
+    

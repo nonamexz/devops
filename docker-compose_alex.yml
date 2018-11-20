@@ -1,0 +1,70 @@
+version: '2'  
+services:
+   zoo1:
+     image: zookeeper:3.4.11
+     restart: always
+     hostname: zoo1
+     container_name: zookeeper_1
+     #domainname: 
+     ports:
+       - 2181:2181
+     volumes:
+       - /opt/data/zoo1data:/data
+       - /opt/logs/zoo1:/datalog
+     environment:
+       ZOO_MY_ID: 1
+       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+
+   zoo2:
+     image: zookeeper:3.4.11
+     restart: always
+     hostname: zoo2
+     container_name: zookeeper_2
+     ports:
+       - 2182:2181
+     volumes:
+       - /opt/data/zoo2data:/data
+       - /opt/logs/zoo2:/datalog
+     environment:
+       ZOO_MY_ID: 2
+       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+
+   zoo3:
+     image: zookeeper:3.4.11
+     restart: always
+     hostname: zoo3
+     container_name: zookeeper_3
+     ports:
+       - 2183:2181
+     volumes:
+       - /opt/data/zoo3data:/data
+       - /opt/logs/zoo3:/datalog
+     environment:
+       ZOO_MY_ID: 3
+       ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+
+
+
+### Redis server ###
+   redis:
+     restart: always
+     image:         redis:3-alpine
+     container_name: redis
+
+     volumes:
+       - /opt/data/redis:/data
+       - /opt/etc/redis/conf:/usr/local/etc/redis/
+     ports:
+       - "6379:6379"
+
+#     command: redis-server /usr/local/etc/redis/redis.conf  
+
+   mrd_core_web:
+     image: tomcat:8.5.34-jre8
+     container_name: mrd_core_web
+     volumes:  
+       - /opt/www/mrd_core_web:/usr/local/tomcat/webapps  
+       - /opt/logs/mrd_core_web:/usr/local/tomcat/logs 
+     ports:  
+       - "8081:8080"
+     restart: always  
